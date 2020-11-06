@@ -7,7 +7,7 @@ Lighweight utility for wrapping a SOCKSv5 proxy with an HTTP(S) proxy.
 ```
 ## Download and build
 go get github.com/klustic/proxytool
-go build
+go build github.com/klustic/proxytool
 
 ## Usage
 $ ./proxytool -h
