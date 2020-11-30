@@ -33,3 +33,44 @@ Listening for HTTP/HTTPS proxy connections and forwarding through SOCKS proxy.
 2020/11/06 15:30:17 [001] INFO: Copied 14 bytes to client error=<nil>
 ...
 ```
+
+## Use Case: `docker pull` through SOCKSv5 Tunnel
+
+> These steps assume you have a SOCKS proxy listening on 127.0.0.1:1080, and Proxytool listening on 127.0.0.1:8080.
+
+Docker does not provide native SOCKS proxy support, but it does provide HTTP/S proxy support. So you can use this tool to wrap your SOCKSv5 proxy with Proxytool as follows:
+
+### Step 1: Add proxy settings for the docker daemon
+
+Since images are pulled by the daemon and not the `docker` cli directly, you have to add daemon configurations for Proxytool and reload systemd:
+
+```
+# [root]# vim /etc/systemd/system/docker.service.d/http-proxy.conf
+[Service]
+Environment="HTTP_PROXY=http://127.0.0.1:8080"
+Environment="HTTPS_PROXY=http://127.0.0.1:8080"
+```
+
+Then reload systemd:
+
+```
+[root]# systemctl daemon-reload
+```
+
+### [OPTIONAL] Step 2: Trust TLS certificates on the docker repository
+
+This is required if the repo's TLS certificate doesn't have a valid trust chain:
+
+```
+[root]# vim /etc/docker/daemon.json
+{
+  "insecure-registries" : ["repo.internal.example.com"]
+}
+[root]# service docker restart
+```
+
+### Step 3: Pull container
+
+```
+docker pull repo.internal.example.com/core/container-with-all-the-secrets:latest
+```
